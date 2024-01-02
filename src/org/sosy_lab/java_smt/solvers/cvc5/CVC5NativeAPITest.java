@@ -25,6 +25,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.After;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -1340,5 +1344,90 @@ public class CVC5NativeAPITest {
         sort,
         exp.getSort(),
         exp);
+  }
+
+  @Test
+  public void bug1() throws InterruptedException, ExecutionException {
+    Solver solver = new Solver();
+
+    ExecutorService exec = Executors.newSingleThreadExecutor();
+    Future<?> result =
+        exec.submit(
+            () -> {
+              Sort sortBool = solver.getBooleanSort();
+              // FIXME: CVC5 1.1.0 crashes (SIGABRT)
+              //  Fatal failure within
+              //  static cvc5::internal::TypeNode
+              //     cvc5::internal::expr::TypeChecker::computeType(
+              //       cvc5::internal::NodeManager*,
+              //       cvc5::internal::TNode,
+              //       bool,
+              //       std::ostream*
+              //       )
+              //  at /home/daniel/workspace/cvc5/build/src/expr/type_checker.cpp:2828
+              //  Unhandled case encountered  VARIABLE
+              Term varA = solver.mkConst(sortBool, "a");
+              assert varA.getSort().equals(sortBool);
+              return null;
+            });
+
+    assert result.get() == null;
+    solver.deletePointer();
+  }
+
+  @Test
+  public void bug2() throws InterruptedException, ExecutionException {
+    Solver solver = new Solver();
+    Term formula = solver.mkFalse();
+
+    ExecutorService exec = Executors.newSingleThreadExecutor();
+    Future<?> result =
+        exec.submit(
+            () -> {
+              Solver prover = new Solver();
+              // FIXME: CVC5 1.1.0 throws an exception
+              //  io.github.cvc5.CVC5ApiException:
+              //   Given term is not associated with the node manager of this solver
+              //  at io.github.cvc5.Solver.assertFormula(Native Method)
+              //  at io.github.cvc5.Solver.assertFormula(Solver.java:1511)
+              //  at org.sosy_lab.java_smt.solvers.cvc5.CVC5NativeAPITest
+              //  at ..here
+              prover.assertFormula(formula);
+              prover.deletePointer();
+              return null;
+            });
+
+    assert result.get() == null;
+    solver.deletePointer();
+  }
+
+  @Test
+  public void bug3() throws InterruptedException, ExecutionException {
+    Solver solver = new Solver();
+    Term varA = solver.mkConst(solver.getBooleanSort(), "a");
+
+    solver.assertFormula(varA);
+
+    ExecutorService exec = Executors.newSingleThreadExecutor();
+    Future<?> task1 =
+        exec.submit(
+            () -> {
+              // FIXME: CVC5 1.1.0 crashes (SIGABRT)
+              //  Fatal failure within
+              //  static cvc5::internal::TypeNode
+              //     cvc5::internal::expr::TypeChecker::computeType(
+              //       cvc5::internal::NodeManager*,
+              //       cvc5::internal::TNode,
+              //       bool,
+              //       std::ostream*
+              //       )
+              //  at /home/daniel/workspace/cvc5/build/src/expr/type_checker.cpp:2828
+              //  Unhandled case encountered  VARIABLE
+              solver.push();
+              return null;
+            });
+
+    assert task1.get() == null;
+    solver.deletePointer();
   }
 }
