@@ -472,11 +472,10 @@ SPDX-License-Identifier: Apache-2.0
 
         <echo message="Configuring and building CVC5 in version '${cvc5.version}'"/>
         <exec executable="./configure.sh" dir="${cvc5.path}" failonerror="true">
-            <!--<arg value="production"/>-->
+            <arg value="production"/>
             <arg value="--java-bindings"/>
             <arg value="--auto-download"/>
             <arg value="--statistics"/>
-            <arg value="--prefix=${cvc5.path}/build/install"/>
             <arg value="-DVAR=fPIC"/>
         </exec>
         <exec executable="make" dir="${cvc5.path}/build/" failonerror="true">
@@ -526,12 +525,28 @@ SPDX-License-Identifier: Apache-2.0
         </exec>
         <exec executable="patchelf" dir="./" failonerror="true">
             <arg value="--set-rpath"/><arg value="$ORIGIN"/>
+            <arg value="--replace-needed"/>
+            <arg value="libcvc5parser.so.1"/>
+            <arg
+                    value="libcvc5parser.so"/>
             <arg value="--replace-needed"/><arg value="libcvc5.so.1"/><arg value="libcvc5.so"/>
+            <arg value="--replace-needed"/>
+            <arg value="libpolyxx.so.0"/>
+            <arg value="libpolyxx.so"/>
+            <arg value="--replace-needed"/>
+            <arg value="libpoly.so.0"/>
+            <arg value="libpoly.so"/>
             <arg value="libcvc5jni-${cvc5.version}.so"/>
         </exec>
         <exec executable="patchelf" dir="./" failonerror="true">
             <arg value="--set-rpath"/><arg value="$ORIGIN"/>
             <arg value="--replace-needed"/><arg value="libcvc5.so.1"/><arg value="libcvc5.so"/>
+            <arg value="--replace-needed"/>
+            <arg value="libpolyxx.so.0"/>
+            <arg value="libpolyxx.so"/>
+            <arg value="--replace-needed"/>
+            <arg value="libpoly.so.0"/>
+            <arg value="libpoly.so"/>
             <arg value="libcvc5parser-${cvc5.version}.so"/>
         </exec>
         <!-- patchelf finds two dependencies and needs to be called twice for libpolyxx.so -->
