@@ -1348,8 +1348,6 @@ public class CVC5NativeAPITest {
 
   @Test
   public void bug1() throws InterruptedException, ExecutionException {
-    Solver solver = new Solver();
-
     ExecutorService exec = Executors.newSingleThreadExecutor();
     Future<?> result =
         exec.submit(
@@ -1377,7 +1375,6 @@ public class CVC5NativeAPITest {
 
   @Test
   public void bug2() throws InterruptedException, ExecutionException {
-    Solver solver = new Solver();
     Term formula = solver.mkFalse();
 
     ExecutorService exec = Executors.newSingleThreadExecutor();
@@ -1403,7 +1400,6 @@ public class CVC5NativeAPITest {
 
   @Test
   public void bug3() throws InterruptedException, ExecutionException {
-    Solver solver = new Solver();
     Term varA = solver.mkConst(solver.getBooleanSort(), "a");
 
     solver.assertFormula(varA);
